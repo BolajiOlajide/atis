@@ -14,6 +14,7 @@
 		6C055EFB2C53D19600355210 /* atisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C055EFA2C53D19600355210 /* atisTests.swift */; };
 		6C055F052C53D19600355210 /* atisUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C055F042C53D19600355210 /* atisUITests.swift */; };
 		6C055F072C53D19600355210 /* atisUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C055F062C53D19600355210 /* atisUITestsLaunchTests.swift */; };
+		6CA460692C551E350098915C /* DirectorySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CA460682C551E350098915C /* DirectorySelector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,7 @@
 		6C055F002C53D19600355210 /* atisUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = atisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C055F042C53D19600355210 /* atisUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = atisUITests.swift; sourceTree = "<group>"; };
 		6C055F062C53D19600355210 /* atisUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = atisUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		6CA460682C551E350098915C /* DirectorySelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectorySelector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +102,7 @@
 				6C055EEC2C53D19500355210 /* Assets.xcassets */,
 				6C055EF12C53D19500355210 /* atis.entitlements */,
 				6C055EEE2C53D19500355210 /* Preview Content */,
+				6CA460682C551E350098915C /* DirectorySelector.swift */,
 			);
 			path = atis;
 			sourceTree = "<group>";
@@ -260,6 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6C055EEB2C53D19400355210 /* ContentView.swift in Sources */,
+				6CA460692C551E350098915C /* DirectorySelector.swift in Sources */,
 				6C055EE92C53D19400355210 /* atisApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
