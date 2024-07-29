@@ -220,6 +220,9 @@
 				Base,
 			);
 			mainGroup = 6C055EDC2C53D19400355210;
+			packageReferences = (
+				6CD807FC2C571D1A00C49F9C /* XCRemoteSwiftPackageReference "ID3TagEditor" */,
+			);
 			productRefGroup = 6C055EE62C53D19400355210 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -585,6 +588,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6CD807FC2C571D1A00C49F9C /* XCRemoteSwiftPackageReference "ID3TagEditor" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/chicio/ID3TagEditor.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 6C055EDD2C53D19400355210 /* Project object */;
 }
