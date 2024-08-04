@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import ID3TagEditor
 
 struct FileItem: Identifiable, Equatable {
     let id = UUID()
@@ -14,10 +15,41 @@ struct FileItem: Identifiable, Equatable {
     let isDirectory: Bool
     let name: String
     let size: Int64
-    let modificationDate: Date
+    var key: String?
+    var bpm: String?
+    var children: [FileItem]?
     
     static func == (lhs: FileItem, rhs: FileItem) -> Bool {
         lhs.id == rhs.id
+    }
+    
+    mutating func readID3Tags() {
+        self.key = "5A"
+        self.bpm = "120"
+//        guard !isDirectory && url.pathExtension.lowercased() == "mp3" else { return }
+//        
+//        do {
+//            let id3TagEditor = try ID3TagEditor(path: url.path)
+//            let id3Tag = try id3TagEditor.read(version: .v2)
+//            
+//            // Try to read BPM
+//            if let bpmFrame = id3Tag?.frames[.BPM] as? ID3FrameWithStringContent {
+//                self.bpm = bpmFrame.content
+//            }
+//            
+//            // Try to read Key
+//            // Serato might store the key in a custom TXXX frame
+//            if let txxxFrames = id3Tag?.frames[.TXXX] as? [ID3FrameWithStringContent] {
+//                for frame in txxxFrames {
+//                    if frame.description == "KEY" {
+//                        self.key = frame.content
+//                        break
+//                    }
+//                }
+//            }
+//        } catch {
+//            print("Error reading ID3 tags for \(name): \(error)")
+//        }
     }
 }
 
@@ -29,34 +61,25 @@ struct DirectorySelector: View {
     @State private var directoryContents: [FileItem] = []
     @State private var selectedSubdirectory: FileItem?
     @State private var subdirectoryContents: [FileItem] = []
+    @State private var rootDirectory: FileItem?
+        @State private var expandedItems = Set<UUID>()
 
     var body: some View {
-        NavigationView {
             VStack {
                 Button("Select Directory") {
                     isPresented = true
+                }
+                
+                if let root = rootDirectory {
+                    List {
+                        fileItemRow(item: root)
+                    }
                 }
                 
                 if let url = selectedURL {
                     Text("Selected directory: \(url.path)")
                         .padding(.bottom)
                     
-                    Toggle("Show Hidden Files", isOn: $showHiddenFiles)
-                        #if compiler(>=5.9) && canImport(SwiftUI)
-                        .onChange(of: showHiddenFiles) { oldValue, newValue in
-                            if let url = selectedURL {
-                                loadDirectoryContents(url: url)
-                            }
-                        }
-                        #else
-                        .onChange(of: showHiddenFiles) { newValue in
-                            if let url = selectedURL {
-                                loadDirectoryContents(url: url)
-                            }
-                        }
-                        #endif
-                    
-                    VStack {
                         Table(directoryContents) {
                             TableColumn("Name") { item in
                                 HStack {
@@ -67,8 +90,11 @@ struct DirectorySelector: View {
                             TableColumn("Size") { item in
                                 Text(item.isDirectory ? "--" : formatFileSize(item.size))
                             }
-                            TableColumn("Modified") { item in
-                                Text(formatDate(item.modificationDate))
+                            TableColumn("Key") { item in
+                                Text(item.key ?? "--")
+                            }
+                            TableColumn("BPM") { item in
+                                Text(item.bpm ?? "--")
                             }
                         }
                         .onChange(of: selectedSubdirectory) { _, newValue in
@@ -78,21 +104,7 @@ struct DirectorySelector: View {
                                 subdirectoryContents = []
                             }
                         }
-                        
-                        if let _ = selectedSubdirectory {
-                            List(subdirectoryContents) { item in
-                                HStack {
-                                    Image(systemName: item.isDirectory ? "folder" : "doc")
-                                    Text(item.name)
-                                }
-                            }
-                        } else {
-                            Text("Select a directory to view its contents")
-                        }
                     }
-                }
-            }
-            .padding()
         }
         .fileImporter(
             isPresented: $isPresented,
@@ -102,9 +114,10 @@ struct DirectorySelector: View {
             switch result {
             case .success(let urls):
                 guard let url = urls.first else { return }
-                selectedURL = url
-                createBookmark(for: url)
-                loadDirectoryContents(url: url)
+                rootDirectory = loadDirectory(url: url)
+//                selectedURL = url
+//                createBookmark(for: url)
+//                loadDirectoryContents(url: url)
             case .failure(let error):
                 print("Error selecting directory: \(error.localizedDescription)")
             }
@@ -114,6 +127,108 @@ struct DirectorySelector: View {
                 self.bookmarkData = bookmarkData
                 resolveBookmark()
             }
+        }
+    }
+    
+    @ViewBuilder
+    private func fileItemRow(item: FileItem) -> some View {
+        if item.isDirectory {
+            DisclosureGroup(
+                isExpanded: Binding(
+                    get: { expandedItems.contains(item.id) },
+                    set: { isExpanded in
+                        if isExpanded {
+                            expandedItems.insert(item.id)
+                            if item.children == nil {
+                                loadChildren(for: item)
+                            }
+                        } else {
+                            expandedItems.remove(item.id)
+                        }
+                    }
+                )
+            ) {
+                ForEach(item.children ?? []) { child in
+                    fileItemRow(item: child)
+                }
+            } label: {
+                Label(item.name, systemImage: "folder")
+            }
+        } else {
+            HStack {
+                Image(systemName: "doc")
+                Text(item.name)
+                Spacer()
+                Text(item.key ?? "--")
+                Text(item.bpm ?? "--")
+            }
+        }
+    }
+    
+    private func loadChildren(for item: FileItem) {
+        guard item.isDirectory else { return }
+        
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(at: item.url, includingPropertiesForKeys: nil) else { return }
+        
+        var children = [FileItem]()
+        while let url = enumerator.nextObject() as? URL {
+            if url.lastPathComponent.hasPrefix(".") { continue }  // Skip hidden files
+            children.append(loadDirectory(url: url))
+            if children.count >= 100 { break }  // Limit to first 100 items for performance
+        }
+        
+        DispatchQueue.main.async {
+            if let index = rootDirectory?.children?.firstIndex(where: { $0.id == item.id }) {
+                rootDirectory?.children?[index].children = children
+            } else if rootDirectory?.id == item.id {
+                rootDirectory?.children = children
+            }
+        }
+    }
+    
+    private func loadDirectory(url: URL) -> FileItem {
+        let fileManager = FileManager.default
+        var isDirectory: ObjCBool = false
+        fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory)
+        
+        let attributes = try? fileManager.attributesOfItem(atPath: url.path)
+        let size = attributes?[.size] as? Int64 ?? 0
+        let modificationDate = attributes?[.modificationDate] as? Date ?? Date()
+        
+        var item = FileItem(
+            url: url,
+            isDirectory: isDirectory.boolValue,
+            name: url.lastPathComponent,
+            size: size
+        )
+        
+        if !item.isDirectory {
+            item.readID3Tags()
+        }
+        
+        return item
+    }
+    
+    private func isValidFileType(url: URL) -> Bool {
+        if isDirectory(url: url) {
+            return true
+        }
+        switch url.pathExtension.lowercased() {
+        case "mp3", "wav", "aiff", "flac", "aac", "m4a", "ogg":
+            return true
+        default:
+            return false
+        }
+    }
+    
+    func isDirectory(url: URL) -> Bool {
+        do {
+            let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
+            return resourceValues.isDirectory ?? false
+        } catch {
+            print("Error determining if directory: \(error)")
+            return false
         }
     }
     
@@ -170,7 +285,7 @@ struct DirectorySelector: View {
             directoryContents = try contents
                 .filter { url in
                     let isHidden = (try? url.resourceValues(forKeys: [.isHiddenKey]).isHidden) ?? false
-                    return !isHidden
+                    return !isHidden && isValidFileType(url: url)
                 }
                 .map { url -> FileItem in
                     let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
@@ -178,8 +293,7 @@ struct DirectorySelector: View {
                         url: url,
                         isDirectory: resourceValues.isDirectory ?? false,
                         name: url.lastPathComponent,
-                        size: Int64(resourceValues.fileSize ?? 0),
-                        modificationDate: resourceValues.contentModificationDate ?? Date.distantPast
+                        size: Int64(resourceValues.fileSize ?? 0)
                     )
                 }
                 .sorted { lhs, rhs in
@@ -217,8 +331,7 @@ struct DirectorySelector: View {
                         url: url,
                         isDirectory: resourceValues.isDirectory ?? false,
                         name: url.lastPathComponent,
-                        size: Int64(resourceValues.fileSize ?? 0),
-                        modificationDate: resourceValues.contentModificationDate ?? Date.distantPast
+                        size: Int64(resourceValues.fileSize ?? 0)
                     )
                 }
                 .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }

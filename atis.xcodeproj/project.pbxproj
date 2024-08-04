@@ -15,6 +15,7 @@
 		6C055F052C53D19600355210 /* atisUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C055F042C53D19600355210 /* atisUITests.swift */; };
 		6C055F072C53D19600355210 /* atisUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C055F062C53D19600355210 /* atisUITestsLaunchTests.swift */; };
 		6CA460692C551E350098915C /* DirectorySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CA460682C551E350098915C /* DirectorySelector.swift */; };
+		6CD807FE2C5732E700C49F9C /* ID3TagEditor in Frameworks */ = {isa = PBXBuildFile; productRef = 6CD807FD2C5732E700C49F9C /* ID3TagEditor */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6CD807FE2C5732E700C49F9C /* ID3TagEditor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,6 +150,9 @@
 			dependencies = (
 			);
 			name = atis;
+			packageProductDependencies = (
+				6CD807FD2C5732E700C49F9C /* ID3TagEditor */,
+			);
 			productName = atis;
 			productReference = 6C055EE52C53D19400355210 /* atis.app */;
 			productType = "com.apple.product-type.application";
@@ -599,6 +604,14 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6CD807FD2C5732E700C49F9C /* ID3TagEditor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6CD807FC2C571D1A00C49F9C /* XCRemoteSwiftPackageReference "ID3TagEditor" */;
+			productName = ID3TagEditor;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6C055EDD2C53D19400355210 /* Project object */;
 }
